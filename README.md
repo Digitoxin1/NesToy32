@@ -1,4 +1,4 @@
-NesToy32 is a program I developed between May of 2000 and July of 2000.  As of today, it is almost 23 years old.  It is written in Borland Delphi and is a successor to my NesToy application which was MS-DOS only.
+NesToy32 is a program I developed between May of 2000 and July of 2000.  As of today, it is almost 23 years old.  It is written in Borland Delphi and is a successor to my NesToy application which was written in Turbo Pascal and was an MS-DOS application.
 
 NesToy32 predates ROM managers such as Clrmamepro and Romcenter and, as far as I know, is one of the first of its kind.
 
