@@ -1,4 +1,4 @@
-program NesToy11;
+program NesToy12;
 {$APPTYPE CONSOLE}
 uses
   SysUtils,
@@ -19,7 +19,7 @@ const
   maxpathnames=200;
   dbasefile='nesdbase.dat';
   outputfile='output.txt';
-  version='1.1';
+  version='1.2';
   private_build=false;
   title='NesToy';
   webpage='http://romcollectors.cjb.net';
@@ -106,7 +106,7 @@ begin
         begin
           if (crc<>'') and (FileExists(destpath)) then
             begin
-              GetNesCrc(DestPath,newcrc,dummy,garbage);
+              GetNesCrc(DestPath,newcrc,dummy,garbage,0,0);
               if newcrc=crc then
                 begin
                   flagrom:=false;
@@ -128,7 +128,7 @@ begin
                       begin
                         if FileExists(Destpath) then
                           begin
-                            GetNesCrc(DestPath,newcrc,dummy,garbage);
+                            GetNesCrc(DestPath,newcrc,dummy,garbage,0,0);
                             if newcrc=crc then
                               begin
                                 flagrom:=false;
@@ -577,6 +577,8 @@ if t=1 then
     writeln('                  l- Convert ROMs to all lowercase names');
     writeln('                  t- Places the word "The" at the beginning of ROM names');
     writeln('                     instead of at the end.');
+    writeln('                  a- Places the words "A", "An", etc. at the beginning of');
+    writeln('                     ROM names instead of at the end.');
     writeln('                  p- Use periods in appropriate ROM names (Warning: Nesticle');
     writeln('                     will not load ROMs with extra periods in them.');
     writeln('-rep,-repair   Repairs ROM headers with those found in database (enables -c)');
@@ -584,9 +586,9 @@ if t=1 then
     writeln('               unused banks of data.');
     writeln('-ips           Patches a ROM if an appropriate IPS patch is found in the');
     writeln('               fixfiles directory.  IPS patches are named by the checksum of');
+    pause;
     writeln('               the ROM they are meant to patch.');
     writeln('-sort[mb]      Sorts ROMs into directories by region or type');
-    pause;
     writeln('                  m- Sorts ROMs by mapper # as well');
     writeln('                  b- Sorts "Bad CHR" dumps into a CHR directory in the');
     writeln('                     Bad Dump directory.');
@@ -609,9 +611,9 @@ if t=1 then
     writeln('-q[o]          Suppresses output to the screen (for those of you who would');
     writeln('               prefer not to see what NesToy is up to.)');
     writeln('                  o- Suppresses output to the output file as well.');
+    pause;
     writeln('-doall         Enables -c,-i,-ren,-repair,-resize,-sort, and -missing');
     writeln('-h,-?,-help    Displays this screen');
-    pause;
     writeln;
     writeln('Filename can include wildcards (*,?) anywhere inside the filename.  Long');
     writeln('file names are allowed.  If no filename is given, (*.nes) is assumed.');
@@ -744,7 +746,7 @@ begin
   if (NesCL.show_4=true) and (nes.fourscr=0) then show:=false;
   if (NesCL.docsum=true) and (show=true) then
     begin
-      GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank);
+      GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank,nes.trainer);
       SearchDBase(csum,dbpos);
       if NesCL.resize=true then
         begin
@@ -776,7 +778,7 @@ begin
                       MoveROM(rtmp+'.bak',dir_backup,errcode);
                       rscount:=rscount+1;
                       cropped:=true;
-                      GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank);
+                      GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank,nes.trainer);
                       SearchDBase(csum,dbpos);
                     end else notrepaired:=true;
                 end;
@@ -793,7 +795,7 @@ begin
                   MoveROM(rtmp+'.bak',dir_backup,errcode);
                 fixcount:=fixcount+1;
                 fixed:=true;
-                GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank);
+                GetNesCrc(Name,csum,prgcsum,garbage,nes.prgbank,nes.trainer);
                 SearchDBase(csum,dbpos);
               end else notrepaired:=true;
           end;
@@ -859,48 +861,19 @@ begin
           if nes.country[8]='3' then ghackedrom:=true;
           if nes.country[8]='1' then hackedrom:=true;
           if nes.country[9]='1' then badrom:=true;
-          if NesCL.mthe=true then result:=movethe(result);
+          ralt:=result;
+          if (NesCL.mthe=true) or (NesCL.ma=true) then
+            result:=moveword(result,NesCL.mthe,NesCL.ma);
           if (NesCL.ccode=true) or (nes.country[2]>'1') or (nes.country[3]>'1') then
             result:=result+nes.getcountry;
           if NesCL.lowcasename=true then result:=LowerCase(result);
           if NesCL.remspace=true then result:=SpaceCvt(result,false);
           if NesCL.uscore=true then result:=SpaceCvt(result,true);
-          if NesCL.remperiod=true then
-            begin
-              ralt:=result;
-              result:=PeriodCvt(result);
-            end else ralt:=PeriodCvt(result);
+          if NesCL.remperiod=true then result:=PeriodCvt(result);
           cmp:=nes.compare(resulthdr.getheader);
           if result+'.nes'<>name then namematch:=false else namematch:=true;
           if (namematch=false) and (NesCL.rname=false) then
-            begin
-              rtmp:=result;
-              if rtmp[length(rtmp)]='.' then rtmp:=rtmp+'nes' else rtmp:=rtmp+'.nes';
-              rtmp2:=ralt;
-              if rtmp2[length(rtmp2)]='.' then rtmp2:=rtmp2+'nes' else rtmp2:=rtmp2+'.nes';
-              if NesCL.mthe=false then
-                if LowerCase(copy(name,1,3))='the' then
-                   begin rtmp:=movethe(rtmp); rtmp2:=movethe(rtmp2); end;
-              if name=LowerCase(name) then
-                begin rtmp:=LowerCase(rtmp); rtmp2:=LowerCase(rtmp2); end;
-              if (rtmp=name) or (rtmp2=name) then namematch:=true else
-                if (SpaceCvt(rtmp,true)=name) or (SpaceCvt(rtmp2,true)=name) then namematch:=true else
-                  if (SpaceCvt(rtmp,false)=name) or (SpaceCvt(rtmp2,false)=name) then namematch:=true else
-                    begin
-                      rtmp:=result+nes.getcountry;
-                      if rtmp[length(rtmp)]='.' then rtmp:=rtmp+'nes' else rtmp:=rtmp+'.nes';
-                      rtmp2:=ralt+nes.getcountry;
-                      if rtmp2[length(rtmp2)]='.' then rtmp2:=rtmp2+'nes' else rtmp2:=rtmp2+'.nes';
-                      if NesCL.mthe=false then
-                        if LowerCase(copy(name,1,3))='the' then
-                          begin rtmp:=movethe(rtmp); rtmp2:=movethe(rtmp2); end;
-                      if name=LowerCase(name) then
-                        begin rtmp:=LowerCase(rtmp); rtmp2:=LowerCase(rtmp2); end;
-                      if (rtmp=name) or (rtmp2=name) then namematch:=true else
-                      if (SpaceCvt(rtmp,true)=name) or (SpaceCvt(rtmp2,true)=name) then namematch:=true else
-                      if (SpaceCvt(rtmp,false)=name) or (SpaceCvt(rtmp2,false)=name) then namematch:=true
-                    end;
-            end;
+            namematch:=checkname(name,ralt,nes.getcountry);
           if result[length(result)]='.' then delete(result,length(result),1);
           if badrom=true then rflag:=6;
           if namematch=false then rflag:=4;
