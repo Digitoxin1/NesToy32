@@ -1,0 +1,34 @@
+Revision History
+----------------
+(Database updates happen with every release of NesToy.)
+
+Version 1.1  - Everything that was broken in NesToy32 v1.0 should be fixed
+               now.
+             - Added -ips command line parameter.  Download and unzip the
+               optional fixfiles archive from the NesToy page and NesToy
+               can now automatically repair bad dumps to make them good.
+             - You can now define the missing file in nestoy.cfg.  It now
+               defaults to nes_miss.txt to avoid conflicts with GoodNES.
+             - NesToy can now correctly detect NES ROMs with mapper #'s
+               over 255. (To whoever defined these mappers, I strongly
+               suggest changing them as mappers over 255 conflict with the
+               VS Unisystem and Playchoice-10 bits in the NES header).
+
+Version 1.0  - NesToy has been rewritten as a 32-bit console application
+               and should run fine in Windows 9x/NT/2000.  You should also
+               notice a nice speed increase and I will now be able to add
+               zip support and possibly a GUI in the future.
+             - Removed the command line option from NESTOY.CFG.  This may
+               return in a later version.
+             - Added NO_BACKUP to NESTOY.CFG.  Has the same effect as the
+               -nobackup command line parameter when set to TRUE.
+             - Added JOLIET to nestoy.cfg.  When set to TRUE, any game
+               titles over 64 characters long will automatically use their
+               short name.  This should help avoid any problems with burning
+               the ROMs to a CD as the joliet standard limits file names to
+               64 characters.  This feature is not perfected yet.
+             - Missing file now defaults to NESMISS.TXT instead of
+               MISSING.TXT.
+             - Default options for -ren and -missing set in nestoy.cfg now
+               work correctly when -doall is used.
+
